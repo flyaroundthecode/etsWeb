@@ -1,5 +1,7 @@
 {
-  "name": "ets",
+  "name": "etsWeb",
+  "appPath": "app",
+  "devServerPath": "devServer",
   "version": "0.0.0",
   "dependencies": {
     "angular": ">=1.2.*",

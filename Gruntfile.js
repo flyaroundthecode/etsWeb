@@ -21,17 +21,19 @@ module.exports = function (grunt) {
   });
 
   // Time how long tasks take. Can help when optimizing build times
-  require('time-grunt')(grunt);
+  //require('time-grunt')(grunt);
 
   // Define the configuration for all the tasks
   grunt.initConfig({
 
     // Project settings
     pkg: grunt.file.readJSON('package.json'),
-    yeoman: {
+    etsApp: {
       // configurable paths
       client: require('./bower.json').appPath || 'client',
-      dist: 'dist'
+      dist: 'dist',
+      devServerPath: require('./bower.json').devServerPath || 'devServer',
+      appPath: require('./bower.json').appPath || 'app'
     },
     express: {
       options: {
@@ -57,15 +59,15 @@ module.exports = function (grunt) {
     watch: {
       injectJS: {
         files: [
-          '<%= yeoman.client %>/{app,components}/**/*.js',
-          '!<%= yeoman.client %>/{app,components}/**/*.spec.js',
-          '!<%= yeoman.client %>/{app,components}/**/*.mock.js',
-          '!<%= yeoman.client %>/app/app.js'],
+          '<%= etsApp.client %>/{app,components}/**/*.js',
+          '!<%= etsApp.client %>/{app,components}/**/*.spec.js',
+          '!<%= etsApp.client %>/{app,components}/**/*.mock.js',
+          '!<%= etsApp.client %>/app/app.js'],
         tasks: ['injector:scripts']
       },
       injectCss: {
         files: [
-          '<%= yeoman.client %>/{app,components}/**/*.css'
+          '<%= etsApp.client %>/{app,components}/**/*.css'
         ],
         tasks: ['injector:css']
       },
@@ -75,19 +77,19 @@ module.exports = function (grunt) {
       },
       jsTest: {
         files: [
-          '<%= yeoman.client %>/{app,components}/**/*.spec.js',
-          '<%= yeoman.client %>/{app,components}/**/*.mock.js'
+          '<%= etsApp.client %>/{app,components}/**/*.spec.js',
+          '<%= etsApp.client %>/{app,components}/**/*.mock.js'
         ],
         tasks: ['newer:jshint:all', 'karma']
       },
       injectSass: {
         files: [
-          '<%= yeoman.client %>/{app,components}/**/*.{scss,sass}'],
+          '<%= etsApp.client %>/{app,components}/**/*.{scss,sass}'],
         tasks: ['injector:sass']
       },
       sass: {
         files: [
-          '<%= yeoman.client %>/{app,components}/**/*.{scss,sass}'],
+          '<%= etsApp.client %>/{app,components}/**/*.{scss,sass}'],
         tasks: ['sass', 'autoprefixer']
       },
       gruntfile: {
@@ -95,12 +97,12 @@ module.exports = function (grunt) {
       },
       livereload: {
         files: [
-          '{.tmp,<%= yeoman.client %>}/{app,components}/**/*.css',
-          '{.tmp,<%= yeoman.client %>}/{app,components}/**/*.html',
-          '{.tmp,<%= yeoman.client %>}/{app,components}/**/*.js',
-          '!{.tmp,<%= yeoman.client %>}{app,components}/**/*.spec.js',
-          '!{.tmp,<%= yeoman.client %>}/{app,components}/**/*.mock.js',
-          '<%= yeoman.client %>/assets/images/{,*//*}*.{png,jpg,jpeg,gif,webp,svg}'
+          '{.tmp,<%= etsApp.client %>}/{app,components}/**/*.css',
+          '{.tmp,<%= etsApp.client %>}/{app,components}/**/*.html',
+          '{.tmp,<%= etsApp.client %>}/{app,components}/**/*.js',
+          '!{.tmp,<%= etsApp.client %>}{app,components}/**/*.spec.js',
+          '!{.tmp,<%= etsApp.client %>}/{app,components}/**/*.mock.js',
+          '<%= etsApp.client %>/assets/images/{,*//*}*.{png,jpg,jpeg,gif,webp,svg}'
         ],
         options: {
           livereload: true
@@ -121,7 +123,7 @@ module.exports = function (grunt) {
     // Make sure code styles are up to par and there are no obvious mistakes
     jshint: {
       options: {
-        jshintrc: '<%= yeoman.client %>/.jshintrc',
+        jshintrc: '<%= etsApp.appPath %>/.jshintrc',
         reporter: require('jshint-stylish')
       },
       server: {
@@ -140,14 +142,13 @@ module.exports = function (grunt) {
         src: ['server/**/*.spec.js']
       },
       all: [
-        '<%= yeoman.client %>/{app,components}/**/*.js',
-        '!<%= yeoman.client %>/{app,components}/**/*.spec.js',
-        '!<%= yeoman.client %>/{app,components}/**/*.mock.js'
+        '<%= etsApp.appPath%>/src/**/*.js'
       ],
       test: {
         src: [
-          '<%= yeoman.client %>/{app,components}/**/*.spec.js',
-          '<%= yeoman.client %>/{app,components}/**/*.mock.js'
+          '<%= etsApp.appPath%>/tests/**/*.mock.js',
+          '<%= etsApp.client %>/{app,components}/**/*.spec.js',
+          '<%= etsApp.client %>/{app,components}/**/*.mock.js'
         ]
       }
     },
@@ -159,14 +160,22 @@ module.exports = function (grunt) {
           dot: true,
           src: [
             '.tmp',
-            '<%= yeoman.dist %>/*',
-            '!<%= yeoman.dist %>/.git*',
-            '!<%= yeoman.dist %>/.openshift',
-            '!<%= yeoman.dist %>/Procfile'
+            '<%= etsApp.dist %>/*',
+            '!<%= etsApp.dist %>/.git*',
+            '!<%= etsApp.dist %>/.openshift',
+            '!<%= etsApp.dist %>/Procfile'
           ]
         }]
       },
-      server: '.tmp'
+      server: '.tmp',
+      devServer: {
+        files: [{
+          dot: true,
+          src: [
+            '<%=etsApp.devServerPath %>/*'
+          ]
+        }]
+      }
     },
 
     // Add vendor prefixed styles
@@ -177,9 +186,9 @@ module.exports = function (grunt) {
       dist: {
         files: [{
           expand: true,
-          cwd: '.tmp/',
-          src: '{,*/}*.css',
-          dest: '.tmp/'
+          cwd: '<%= devServerPath %>',
+          src: 'styles/**/*.css',
+          dest: '<%= devServerPath %>/styles'
         }]
       }
     },
@@ -221,8 +230,8 @@ module.exports = function (grunt) {
     // Automatically inject Bower components into the app
     wiredep: {
       target: {
-        src: '<%= yeoman.client %>/index.html',
-        ignorePath: '<%= yeoman.client %>/',
+        src: '<%= etsApp.client %>/index.html',
+        ignorePath: '<%= etsApp.client %>/',
         exclude: [/bootstrap-sass-official/, /bootstrap.js/, '/json3/', '/es5-shim/', /bootstrap.css/, /font-awesome.css/ ]
       }
     },
@@ -232,10 +241,10 @@ module.exports = function (grunt) {
       dist: {
         files: {
           src: [
-            '<%= yeoman.dist %>/public/{,*/}*.js',
-            '<%= yeoman.dist %>/public/{,*/}*.css',
-            '<%= yeoman.dist %>/public/assets/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}',
-            '<%= yeoman.dist %>/public/assets/fonts/*'
+            '<%= etsApp.devServerPath %>/src/{,*/}*.js',
+            '<%= etsApp.devServerPath %>/styles/{,*/}*.css',
+            '<%= etsApp.devServerPath %>/assets/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}',
+            '<%= etsApp.devServerPath %>/assets/fonts/*'
           ]
         }
       }
@@ -245,21 +254,21 @@ module.exports = function (grunt) {
     // concat, minify and revision files. Creates configurations in memory so
     // additional tasks can operate on them
     useminPrepare: {
-      html: ['<%= yeoman.client %>/index.html'],
+      html: ['<%= etsApp.appPath %>/templates/*'],
       options: {
-        dest: '<%= yeoman.dist %>/public'
+        dest: '<%= etsApp.devServerPath %>/templates/'
       }
     },
 
     // Performs rewrites based on rev and the useminPrepare configuration
     usemin: {
-      html: ['<%= yeoman.dist %>/public/{,*/}*.html'],
-      css: ['<%= yeoman.dist %>/public/{,*/}*.css'],
-      js: ['<%= yeoman.dist %>/public/{,*/}*.js'],
+      html: ['<%= etsApp.devServerPath %>/templates/{,*/}*.html'],
+      css: ['<%= etsApp.devServerPath %>/styles/{,*/}*.css'],
+      js: ['<%= etsApp.devServerPath %>/src/{,*/}*.js'],
       options: {
         assetsDirs: [
-          '<%= yeoman.dist %>/public',
-          '<%= yeoman.dist %>/public/assets/images'
+          '<%= etsApp.devServerPath %>/',
+          '<%= etsApp.devServerPath %>/assets/images'
         ],
         // This is so we update image references in our ng-templates
         patterns: {
@@ -275,9 +284,9 @@ module.exports = function (grunt) {
       dist: {
         files: [{
           expand: true,
-          cwd: '<%= yeoman.client %>/assets/images',
+          cwd: '<%= etsApp.appPath %>/assets/images',
           src: '{,*/}*.{png,jpg,jpeg,gif}',
-          dest: '<%= yeoman.dist %>/public/assets/images'
+          dest: '<%= etsApp.devServerPath %>/assets/images'
         }]
       }
     },
@@ -286,9 +295,9 @@ module.exports = function (grunt) {
       dist: {
         files: [{
           expand: true,
-          cwd: '<%= yeoman.client %>/assets/images',
+          cwd: '<%= etsApp.appPath %>/assets/images',
           src: '{,*/}*.svg',
-          dest: '<%= yeoman.dist %>/public/assets/images'
+          dest: '<%= etsApp.devServerPath %>/assets/images'
         }]
       }
     },
@@ -323,21 +332,16 @@ module.exports = function (grunt) {
         usemin: 'app/app.js'
       },
       main: {
-        cwd: '<%= yeoman.client %>',
-        src: ['{app,components}/**/*.html'],
-        dest: '.tmp/templates.js'
-      },
-      tmp: {
-        cwd: '.tmp',
-        src: ['{app,components}/**/*.html'],
-        dest: '.tmp/tmp-templates.js'
+        cwd: '<%= etsApp.appPath %>',
+        src: ['views/**/*.html'],
+        dest: '<%= etsApp.devServerPath %>/src/templates.js'
       }
     },
 
     // Replace Google CDN references
     cdnify: {
       dist: {
-        html: ['<%= yeoman.dist %>/public/*.html']
+        html: ['<%= etsApp.dist %>/public/*.html']
       }
     },
 
@@ -347,8 +351,8 @@ module.exports = function (grunt) {
         files: [{
           expand: true,
           dot: true,
-          cwd: '<%= yeoman.client %>',
-          dest: '<%= yeoman.dist %>/public',
+          cwd: '<%= etsApp.client %>',
+          dest: '<%= etsApp.dist %>/public',
           src: [
             '*.{ico,png,txt}',
             '.htaccess',
@@ -360,20 +364,36 @@ module.exports = function (grunt) {
         }, {
           expand: true,
           cwd: '.tmp/images',
-          dest: '<%= yeoman.dist %>/public/assets/images',
+          dest: '<%= etsApp.dist %>/public/assets/images',
           src: ['generated/*']
         }, {
           expand: true,
-          dest: '<%= yeoman.dist %>',
+          dest: '<%= etsApp.dist %>',
           src: [
             'package.json',
             'server/**/*'
           ]
         }]
       },
+      templates: {
+        files: [{
+          expand: true,
+          dot: true,
+          cwd: '<%= etsApp.appPath %>',
+          dest: '<%= etsApp.devServerPath %>',
+          src: [
+            'templates/**/*.html'
+          ]
+        },{
+          expand: true,
+          cwd: '<%= etsApp.appPath %>',
+          dest: '<%= etsApp.devServerPath %>',
+          src: ['assets/**/*']
+        }]
+      },
       styles: {
         expand: true,
-        cwd: '<%= yeoman.client %>',
+        cwd: '<%= etsApp.client %>',
         dest: '.tmp/',
         src: ['{app,components}/**/*.css']
       }
@@ -409,6 +429,7 @@ module.exports = function (grunt) {
       test: [
         'sass',
       ],
+      dev: ['sass',],
       debug: {
         tasks: [
           'nodemon',
@@ -468,80 +489,41 @@ module.exports = function (grunt) {
       server: {
         options: {
           loadPath: [
-            '<%= yeoman.client %>/bower_components',
-            '<%= yeoman.client %>/app',
-            '<%= yeoman.client %>/components'
+            '<%= etsApp.appPath %>/styles',
+            '<%= etsApp.appPath %>/components'
           ],
           compass: false
         },
         files: {
-          '.tmp/app/app.css' : '<%= yeoman.client %>/app/app.scss'
+          '<%= etsApp.devServerPath %>/styles/etsApp.css' : '<%= etsApp.client %>/styles/etsApp.scss'
         }
       }
     },
 
-    injector: {
+    concat: {
       options: {
-
+        stripBanners: true,
+        banner: '/*! <%= pkg.name %> - v<%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd") %> */',
       },
-      // Inject application script files into index.html (doesn't include bower)
-      scripts: {
-        options: {
-          transform: function(filePath) {
-            filePath = filePath.replace('/client/', '');
-            filePath = filePath.replace('/.tmp/', '');
-            return '<script src="' + filePath + '"></script>';
-          },
-          starttag: '<!-- injector:js -->',
-          endtag: '<!-- endinjector -->'
-        },
+      source: {
         files: {
-          '<%= yeoman.client %>/index.html': [
-              ['{.tmp,<%= yeoman.client %>}/{app,components}/**/*.js',
-               '!{.tmp,<%= yeoman.client %>}/app/app.js',
-               '!{.tmp,<%= yeoman.client %>}/{app,components}/**/*.spec.js',
-               '!{.tmp,<%= yeoman.client %>}/{app,components}/**/*.mock.js']
-            ]
+          '<%= etsApp.devServerPath %>/src/etsApp.js': ['<%= etsApp.appPath %>/src/**/*.js']
         }
       },
-
-      // Inject component scss into app.scss
-      sass: {
-        options: {
-          transform: function(filePath) {
-            filePath = filePath.replace('/client/app/', '');
-            filePath = filePath.replace('/client/components/', '');
-            return '@import \'' + filePath + '\';';
-          },
-          starttag: '// injector',
-          endtag: '// endinjector'
-        },
+      components: {
         files: {
-          '<%= yeoman.client %>/app/app.scss': [
-            '<%= yeoman.client %>/{app,components}/**/*.{scss,sass}',
-            '!<%= yeoman.client %>/app/app.{scss,sass}'
-          ]
-        }
-      },
-
-      // Inject component css into index.html
-      css: {
-        options: {
-          transform: function(filePath) {
-            filePath = filePath.replace('/client/', '');
-            filePath = filePath.replace('/.tmp/', '');
-            return '<link rel="stylesheet" href="' + filePath + '">';
-          },
-          starttag: '<!-- injector:css -->',
-          endtag: '<!-- endinjector -->'
-        },
-        files: {
-          '<%= yeoman.client %>/index.html': [
-            '<%= yeoman.client %>/{app,components}/**/*.css'
-          ]
+          '<%= etsApp.devServerPath %>/src/etsApp-components.js': ['<%= etsApp.appPath %>/components/jquery/dist/jquery.js',
+                '<%= etsApp.appPath %>/components/jquery/dist/jquery.js',
+                '<%= etsApp.appPath %>/components/angular/angular.js',
+                '<%= etsApp.appPath %>/components/angular-resource/angular-resource.js',
+                '<%= etsApp.appPath %>/components/angular-cookies/angular-cookies.js',
+                '<%= etsApp.appPath %>/components/angular-sanitize/angular-sanitize.js',
+                '<%= etsApp.appPath %>/components/angular-route/angular-route.js',
+                '<%= etsApp.appPath %>/components/angular-bootstrap/ui-bootstrap-tpls.js',
+                '<%= etsApp.appPath %>/components/lodash/dist/lodash.compat.js']
         }
       }
-    },
+    }
   });
 
   // Used for delaying livereload until after server has restarted
@@ -663,5 +645,20 @@ module.exports = function (grunt) {
     'newer:jshint',
     'test',
     'build'
+  ]);
+
+  grunt.registerTask('dev', [
+    'clean:devServer',
+    'jshint:all',
+    'sass',
+    'autoprefixer',
+    'ngtemplates',
+    'concat:source',
+    'concat:components',
+    'copy:templates',
+    'express:dev',
+      'wait',
+      'open',
+      'watch'
   ]);
 };
